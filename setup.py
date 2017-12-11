@@ -8,4 +8,8 @@ setup(name='keras_lr_finder',
       author_email='pavel@surmenok.com',
       license='MIT',
       packages=['keras_lr_finder'],
+      install_requires=[
+            'keras>=2.0.0',
+            'matplotlib'
+      ],
       zip_safe=False)
