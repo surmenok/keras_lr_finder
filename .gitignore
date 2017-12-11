@@ -122,3 +122,6 @@ ENV/
 
 # IntelliJ
 out/
+
+# Temporary files
+/examples/tmp.h5
