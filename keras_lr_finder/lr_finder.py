@@ -39,7 +39,7 @@ class LRFinder:
 
     def find(self, x_train, y_train, start_lr, end_lr, batch_size=64, epochs=1):
         num_batches = epochs * x_train.shape[0] / batch_size
-        self.lr_mult = (end_lr / start_lr) ** (1 / num_batches)
+        self.lr_mult = (float(end_lr) / float(start_lr)) ** (float(1) / float(num_batches))
 
         # Save weights into a file
         self.model.save_weights('tmp.h5')
