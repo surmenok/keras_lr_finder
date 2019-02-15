@@ -62,8 +62,12 @@ class LRFinder:
         # Restore the original learning rate
         K.set_value(self.model.optimizer.lr, original_lr)
 
-    def find_generator(self, generator, start_lr, end_lr, batch_size=64, epochs=1):
-        num_batches = epochs * len(generator)
+    def find_generator(self, generator, start_lr, end_lr, steps_per_epoch=None, epochs=1):
+        num_batches = (
+            epochs * len(generator) if steps_per_epoch == None 
+            else epochs * steps_per_epoch
+        )
+
         self.lr_mult = (float(end_lr) / float(start_lr)) ** (float(1) / float(num_batches))
 
         # Save weights into a file
@@ -77,7 +81,8 @@ class LRFinder:
 
         callback = LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
 
-        self.model.fit_generator(generator, epochs=epochs, callbacks=[callback])
+        self.model.fit_generator(generator, steps_per_epoch=steps_per_epoch,
+                                epochs=epochs, callbacks=[callback])
 
         # Restore the weights to the state before model fitting
         self.model.load_weights('tmp.h5')
