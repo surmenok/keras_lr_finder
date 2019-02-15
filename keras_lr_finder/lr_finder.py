@@ -37,8 +37,7 @@ class LRFinder:
         lr *= self.lr_mult
         K.set_value(self.model.optimizer.lr, lr)
 
-    def find(self, x_train, y_train, start_lr, end_lr, batch_size=64, epochs=1):
-        num_batches = epochs * x_train.shape[0] / batch_size
+    def run(self, start_lr, end_lr, num_batches, fit_fn):
         self.lr_mult = (float(end_lr) / float(start_lr)) ** (float(1) / float(num_batches))
 
         # Save weights into a file
@@ -52,15 +51,22 @@ class LRFinder:
 
         callback = LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
 
-        self.model.fit(x_train, y_train,
-                        batch_size=batch_size, epochs=epochs,
-                        callbacks=[callback])
+        # Calling fit or fit_generator
+        fit_fn(self.model, callback)
 
         # Restore the weights to the state before model fitting
         self.model.load_weights('tmp.h5')
 
         # Restore the original learning rate
         K.set_value(self.model.optimizer.lr, original_lr)
+
+    def find(self, x_train, y_train, start_lr, end_lr, batch_size=64, epochs=1):
+        num_batches = epochs * x_train.shape[0] / batch_size
+
+        self.run(start_lr, end_lr, num_batches, lambda model, callback: (
+            model.fit(x_train, y_train, batch_size=batch_size,
+                        epochs=epochs, callbacks=[callback])
+        ))
 
     def find_generator(self, generator, start_lr, end_lr, steps_per_epoch=None, epochs=1):
         num_batches = (
@@ -68,27 +74,10 @@ class LRFinder:
             else epochs * steps_per_epoch
         )
 
-        self.lr_mult = (float(end_lr) / float(start_lr)) ** (float(1) / float(num_batches))
-
-        # Save weights into a file
-        self.model.save_weights('tmp.h5')
-
-        # Remember the original learning rate
-        original_lr = K.get_value(self.model.optimizer.lr)
-
-        # Set the initial learning rate
-        K.set_value(self.model.optimizer.lr, start_lr)
-
-        callback = LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
-
-        self.model.fit_generator(generator, steps_per_epoch=steps_per_epoch,
+        self.run(start_lr, end_lr, num_batches, lambda model, callback: (
+            model.fit_generator(generator, steps_per_epoch=steps_per_epoch,
                                 epochs=epochs, callbacks=[callback])
-
-        # Restore the weights to the state before model fitting
-        self.model.load_weights('tmp.h5')
-
-        # Restore the original learning rate
-        K.set_value(self.model.optimizer.lr, original_lr)
+        ))
 
     def plot_loss(self, n_skip_beginning=10, n_skip_end=5):
         """
