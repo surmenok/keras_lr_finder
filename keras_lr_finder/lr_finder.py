@@ -62,10 +62,17 @@ class LRFinder:
         # Restore the original learning rate
         K.set_value(self.model.optimizer.lr, original_lr)
 
-    def find_generator(self, generator, start_lr, end_lr, epochs=1, num_batches=None):
-            if num_batches is None:
-                num_batches = len(generator)
-            self.lr_mult = (float(end_lr) / float(start_lr)) ** (float(1) /float(num_batches))
+    def find_generator(self, generator, start_lr, end_lr, epochs=1, steps_per_epoch=None, **kw_fit):
+            if steps_per_epoch is None:
+                try:
+                    steps_per_epoch = len(generator)
+                except (ValueError, NotImplementedError) as e:
+                    raise e('`steps_per_epoch=None` is only valid for a'
+                            ' generator based on the '
+                            '`keras.utils.Sequence`'
+                            ' class. Please specify `steps_per_epoch` '
+                            'or use the `keras.utils.Sequence` class.')
+            self.lr_mult = (float(end_lr) / float(start_lr)) ** (float(1) / float(steps_per_epoch))
 
             # Save weights into a file
             self.model.save_weights('tmp.h5')
@@ -81,10 +88,9 @@ class LRFinder:
 
             self.model.fit_generator(generator=generator,
                                      epochs=epochs,
-                                     steps_per_epoch=num_batches,
-                                     use_multiprocessing=True,
-                                     workers=4,
-                                     callbacks=[callback])
+                                     steps_per_epoch=steps_per_epoch,
+                                     callbacks=[callback],
+                                     **kw_fit)
 
             # Restore the weights to the state before model fitting
             self.model.load_weights('tmp.h5')
