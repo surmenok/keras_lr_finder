@@ -13,6 +13,13 @@ lr_finder = LRFinder(model)
 # Train a model with batch size 512 for 5 epochs
 # with learning rate growing exponentially from 0.0001 to 1
 lr_finder.find(x_train, y_train, start_lr=0.0001, end_lr=1, batch_size=512, epochs=5)
+
+# In case you are using a generator
+lr_finder.find_generator(generator, start_lr=0.0001, end_lr=1, epochs=1)
+
+# If your generator is infinite
+lr_finder.find_generator(generator, steps_per_epoch=math.floor(train_size/batch_size), start_lr=0.0001, end_lr=1, epochs=1)
+
 ```
 
 ```python
