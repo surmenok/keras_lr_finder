@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 import math
 from keras.callbacks import LambdaCallback
 import keras.backend as K
+import numpy as np
 
 
 class LRFinder:
