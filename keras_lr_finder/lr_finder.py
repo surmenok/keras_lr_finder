@@ -27,7 +27,7 @@ class LRFinder:
         self.losses.append(loss)
 
         # Check whether the loss got too large or NaN
-        if math.isnan(loss) or loss > self.best_loss * 4:
+        if batch > 5 and (math.isnan(loss) or loss > self.best_loss * 4):
             self.model.stop_training = True
             return
 
