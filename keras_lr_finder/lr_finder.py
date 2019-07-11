@@ -119,14 +119,22 @@ class LRFinder:
             n_skip_end - number of batches to skip on the right.
             y_lim - limits for the y axis.
         """
+        derivatives = self.get_derivatives(sma)[n_skip_beginning:-n_skip_end]
+        lrs = self.lrs[n_skip_beginning:-n_skip_end]
+        plt.ylabel("rate of loss change")
+        plt.xlabel("learning rate (log scale)")
+        plt.plot(lrs, derivatives)
+        plt.xscale('log')
+        plt.ylim(y_lim)
+
+    def get_derivatives(self, sma):
         assert sma >= 1
         derivatives = [0] * sma
         for i in range(sma, len(self.lrs)):
-            derivative = (self.losses[i] - self.losses[i - sma]) / sma
-            derivatives.append(derivative)
+            derivatives.append((self.losses[i] - self.losses[i - sma]) / sma)
+        return derivatives
 
-        plt.ylabel("rate of loss change")
-        plt.xlabel("learning rate (log scale)")
-        plt.plot(self.lrs[n_skip_beginning:-n_skip_end], derivatives[n_skip_beginning:-n_skip_end])
-        plt.xscale('log')
-        plt.ylim(y_lim)
+    def get_best_lr(self, sma, n_skip_beginning=10, n_skip_end=5):
+        derivatives = self.get_derivatives(sma)
+        best_der_idx = np.argmax(derivatives[n_skip_beginning:-n_skip_end])[0]
+        return self.lrs[n_skip_beginning:-n_skip_end][best_der_idx]
