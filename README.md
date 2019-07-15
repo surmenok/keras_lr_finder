@@ -1,5 +1,6 @@
 # keras_lr_finder
 Plots the change of the loss function of a Keras model when the learning rate is exponentially increasing.
+Will also calculate the best learning rate.
 ## Purpose
 See details in ["Estimating an Optimal Learning Rate For a Deep Neural Network"](https://towardsdatascience.com/estimating-optimal-learning-rate-for-a-deep-neural-network-ce32f2556ce0).
 
@@ -31,6 +32,42 @@ lr_finder.plot_loss_change(sma=20, n_skip_beginning=20, n_skip_end=5, y_lim=(-0.
 ```
 
 ![Rate of change of the loss function](https://cdn-images-1.medium.com/max/1600/1*87mKq_XomYyJE29l91K0dw.png)
+
+Once the finder has picked your best learning rate, update your model to use it:
+```python
+# Set the learning rate of your model to the newly found one
+import keras.backend as K
+new_lr = lr_finder.get_best_lr(sma=4)
+K.set_value(model.optimizer.lr, new_lr)
+```
+You can wrap this up nicely in a `LambdaCallback`, so that you periodically update your learning rate:
+
+```python
+from keras.callbacks import LambdaCallback
+def find_lr(epoch, logs):
+    # You may also make it more effective by only
+    # running this if the loss has stopped improving a la ReduceLROnPlateau
+    if epoch % 30 == 0:
+        lrf = LRFinder(model)
+        lrf.find(x_train,y_train, start_lr=0.0001, end_lr=1,batch_size=512,epochs=5)
+        new_lr = lrf.get_best_lr(4)
+        K.set_value(model.optimizer.lr, new_lr)
+    
+lcb = LambdaCallback(on_epoch_end=find_lr)
+model.train(callbacks=[lcb],...)
+```
+### Use With Generator
+
+This library call also be used with generators (where `num_samples` is the total number of training samples in your training set):
+
+```python
+lrf = LRFinder(model)
+lrf.find_generator(train_gen, 
+                   start_lr=0.0001, 
+                   end_lr=1, 
+                   epochs=5, 
+                   steps_per_epoch=num_samples // batch_size)
+```
 
 ## Contributions
 Contributions are welcome. Please, file issues and submit pull requests on GitHub, or contact me directly.
