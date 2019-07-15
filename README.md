@@ -56,7 +56,18 @@ def find_lr(epoch, logs):
 lcb = LambdaCallback(on_epoch_end=find_lr)
 model.train(callbacks=[lcb],...)
 ```
+### Use With Generator
 
+This library call also be used with generators (where `num_samples` is the total number of training samples in your training set):
+
+```python
+lrf = LRFinder(model)
+lrf.find_generator(train_gen, 
+                   start_lr=0.0001, 
+                   end_lr=1, 
+                   epochs=5, 
+                   steps_per_epoch=num_samples // batch_size)
+```
 
 ## Contributions
 Contributions are welcome. Please, file issues and submit pull requests on GitHub, or contact me directly.
