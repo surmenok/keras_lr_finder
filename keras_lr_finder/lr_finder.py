@@ -39,7 +39,12 @@ class LRFinder:
         K.set_value(self.model.optimizer.lr, lr)
 
     def find(self, x_train, y_train, start_lr, end_lr, batch_size=64, epochs=1):
-        num_batches = epochs * x_train.shape[0] / batch_size
+        # If x_train contains data for multiple inputs, use length of the first input.
+        # Assumption: the first element in the list is single input; NOT a list of inputs.
+        N = x_train[0].shape[0] if isinstance(x_train, list) else x_train.shape[0]
+        
+        # Compute number of batches and LR multiplier 
+        num_batches = epochs * N / batch_size
         self.lr_mult = (float(end_lr) / float(start_lr)) ** (float(1) / float(num_batches))
 
         # Save weights into a file
