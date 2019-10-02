@@ -46,7 +46,6 @@ class LRFinder:
         # Compute number of batches and LR multiplier 
         num_batches = epochs * N / batch_size
         self.lr_mult = (float(end_lr) / float(start_lr)) ** (float(1) / float(num_batches))
-
         # Save weights into a file
         self.model.save_weights('tmp.h5')
 
@@ -104,7 +103,7 @@ class LRFinder:
             # Restore the original learning rate
             K.set_value(self.model.optimizer.lr, original_lr)
 
-    def plot_loss(self, n_skip_beginning=10, n_skip_end=5):
+    def plot_loss(self, n_skip_beginning=10, n_skip_end=5, x_scale='log'):
         """
         Plots the loss.
         Parameters:
@@ -114,8 +113,8 @@ class LRFinder:
         plt.ylabel("loss")
         plt.xlabel("learning rate (log scale)")
         plt.plot(self.lrs[n_skip_beginning:-n_skip_end], self.losses[n_skip_beginning:-n_skip_end])
-        plt.xscale('log')
-
+        plt.xscale(x_scale)
+        plt.show()
     def plot_loss_change(self, sma=1, n_skip_beginning=10, n_skip_end=5, y_lim=(-0.01, 0.01)):
         """
         Plots rate of change of the loss function.
@@ -132,7 +131,8 @@ class LRFinder:
         plt.plot(lrs, derivatives)
         plt.xscale('log')
         plt.ylim(y_lim)
-
+        plt.show()
+  
     def get_derivatives(self, sma):
         assert sma >= 1
         derivatives = [0] * sma
