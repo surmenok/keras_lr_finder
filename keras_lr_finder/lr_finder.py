@@ -39,7 +39,7 @@ class LRFinder:
         lr *= self.lr_mult
         K.set_value(self.model.optimizer.learning_rate, lr)
 
-    def find(self, x_train, y_train, start_lr, end_lr, batch_size=64, epochs=1):
+    def find(self, x_train, y_train, start_lr, end_lr, batch_size=64, epochs=1, **kw_fit):
         # If x_train contains data for multiple inputs, use length of the first input.
         # Assumption: the first element in the list is single input; NOT a list of inputs.
         N = x_train[0].shape[0] if isinstance(x_train, list) else x_train.shape[0]
@@ -60,7 +60,8 @@ class LRFinder:
 
         self.model.fit(x_train, y_train,
                        batch_size=batch_size, epochs=epochs,
-                       callbacks=[callback])
+                       callbacks=[callback],
+                       **kw_fit)
 
         # Restore the weights to the state before model fitting
         self.model.load_weights('tmp.h5')
