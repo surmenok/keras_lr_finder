@@ -145,5 +145,5 @@ class LRFinder:
 
     def get_best_lr(self, sma, n_skip_beginning=10, n_skip_end=5):
         derivatives = self.get_derivatives(sma)
-        best_der_idx = np.argmax(derivatives[n_skip_beginning:-n_skip_end])[0]
+        best_der_idx = np.argmin(derivatives[n_skip_beginning:-n_skip_end])[0]
         return self.lrs[n_skip_beginning:-n_skip_end][best_der_idx]
