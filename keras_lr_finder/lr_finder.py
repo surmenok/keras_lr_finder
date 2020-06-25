@@ -20,7 +20,7 @@ class LRFinder:
 
     def on_batch_end(self, batch, logs):
         # Log the learning rate
-        lr = K.get_value(self.model.optimizer.learning_rate)
+        lr = K.get_value(self.model.optimizer.lr)
         self.lrs.append(lr)
 
         # Log the loss
@@ -37,9 +37,9 @@ class LRFinder:
 
         # Increase the learning rate for the next batch
         lr *= self.lr_mult
-        K.set_value(self.model.optimizer.learning_rate, lr)
+        K.set_value(self.model.optimizer.lr, lr)
 
-    def find(self, x_train, y_train, start_lr, end_lr, batch_size=64, epochs=1):
+    def find(self, x_train, y_train, start_lr, end_lr, batch_size=64, epochs=1, **kw_fit):
         # If x_train contains data for multiple inputs, use length of the first input.
         # Assumption: the first element in the list is single input; NOT a list of inputs.
         N = x_train[0].shape[0] if isinstance(x_train, list) else x_train.shape[0]
@@ -51,22 +51,23 @@ class LRFinder:
         self.model.save_weights('tmp.h5')
 
         # Remember the original learning rate
-        original_lr = K.get_value(self.model.optimizer.learning_rate)
+        original_lr = K.get_value(self.model.optimizer.lr)
 
         # Set the initial learning rate
-        K.set_value(self.model.optimizer.learning_rate, start_lr)
+        K.set_value(self.model.optimizer.lr, start_lr)
 
         callback = LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
 
         self.model.fit(x_train, y_train,
                        batch_size=batch_size, epochs=epochs,
-                       callbacks=[callback])
+                       callbacks=[callback],
+                       **kw_fit)
 
         # Restore the weights to the state before model fitting
         self.model.load_weights('tmp.h5')
 
         # Restore the original learning rate
-        K.set_value(self.model.optimizer.learning_rate, original_lr)
+        K.set_value(self.model.optimizer.lr, original_lr)
 
     def find_generator(self, generator, start_lr, end_lr, epochs=1, steps_per_epoch=None, **kw_fit):
         if steps_per_epoch is None:
@@ -84,10 +85,10 @@ class LRFinder:
         self.model.save_weights('tmp.h5')
 
         # Remember the original learning rate
-        original_lr = K.get_value(self.model.optimizer.learning_rate)
+        original_lr = K.get_value(self.model.optimizer.lr)
 
         # Set the initial learning rate
-        K.set_value(self.model.optimizer.learning_rate, start_lr)
+        K.set_value(self.model.optimizer.lr, start_lr)
 
         callback = LambdaCallback(on_batch_end=lambda batch,
                                                       logs: self.on_batch_end(batch, logs))
@@ -102,7 +103,7 @@ class LRFinder:
         self.model.load_weights('tmp.h5')
 
         # Restore the original learning rate
-        K.set_value(self.model.optimizer.learning_rate, original_lr)
+        K.set_value(self.model.optimizer.lr, original_lr)
 
     def plot_loss(self, n_skip_beginning=10, n_skip_end=5, x_scale='log'):
         """
@@ -144,5 +145,5 @@ class LRFinder:
 
     def get_best_lr(self, sma, n_skip_beginning=10, n_skip_end=5):
         derivatives = self.get_derivatives(sma)
-        best_der_idx = np.argmax(derivatives[n_skip_beginning:-n_skip_end])[0]
+        best_der_idx = np.argmin(derivatives[n_skip_beginning:-n_skip_end])
         return self.lrs[n_skip_beginning:-n_skip_end][best_der_idx]
