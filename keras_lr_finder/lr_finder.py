@@ -48,7 +48,7 @@ class LRFinder:
         num_batches = epochs * N / batch_size
         self.lr_mult = (float(end_lr) / float(start_lr)) ** (float(1) / float(num_batches))
         # Save weights into a file
-        self.weights = self.model.get_weights()
+        initial_weights = self.model.get_weights()
 
         # Remember the original learning rate
         original_lr = K.get_value(self.model.optimizer.learning_rate)
@@ -63,7 +63,7 @@ class LRFinder:
                        callbacks=[callback])
 
         # Restore the weights to the state before model fitting
-        self.model.set_weights(self.weights)
+        self.model.set_weights(initial_weights)
 
         # Restore the original learning rate
         K.set_value(self.model.optimizer.learning_rate, original_lr)
@@ -81,7 +81,7 @@ class LRFinder:
         self.lr_mult = (float(end_lr) / float(start_lr)) ** (float(1) / float(epochs * steps_per_epoch))
 
         # Save weights into a file
-        self.weights = self.model.get_weights()
+        initial_weights = self.model.get_weights()
 
         # Remember the original learning rate
         original_lr = K.get_value(self.model.optimizer.learning_rate)
@@ -99,7 +99,7 @@ class LRFinder:
                                  **kw_fit)
 
         # Restore the weights to the state before model fitting
-        self.model.set_weights(self.weights)
+        self.model.set_weights(initial_weights)
 
         # Restore the original learning rate
         K.set_value(self.model.optimizer.learning_rate, original_lr)
